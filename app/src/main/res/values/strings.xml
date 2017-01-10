@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Wheel2Watch</string>
+    <!-- Title of preference activity -->
+    <!-- Name of extension, shown in preferences -->
+    <string name="extension_name">Wheel2Watch</string>
+    <!-- Configuration title shown in preferences -->
+    <string name="configuration_text">Wheel2Watch Settings</string>
+    <!-- Menu option shown in preferences -->
+    <!-- Read me text shown in dialog -->
+
+
+</resources>
