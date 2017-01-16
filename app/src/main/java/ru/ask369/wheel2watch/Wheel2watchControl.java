@@ -84,6 +84,8 @@ class Wheel2watchControl extends ControlExtension {
     String distanceLabel = "0.0km";
     String battLabel = "0%";
     String tempLabel = "0°";
+    boolean wheelConnected = false;
+    String wheelConnectedLabel = "No conn";
 
     long lastVibe = 0;
     long readyTime = Calendar.getInstance().getTimeInMillis();;
@@ -92,7 +94,16 @@ class Wheel2watchControl extends ControlExtension {
         this.readyTime = Calendar.getInstance().getTimeInMillis();
     }
 
-
+    public void setWheelConnected(boolean val){
+        if (wheelConnected != val) {
+            wheelConnected = val;
+            if (wheelConnected)
+                wheelConnectedLabel = "OK";
+            else
+                wheelConnectedLabel = "Fail";
+            sendText(R.id.tv_connected, wheelConnectedLabel);
+        }
+    }
     public void setVibe (String val, boolean send){
         long now = Calendar.getInstance().getTimeInMillis();
         if (send && now - lastVibe > 2000){
@@ -122,7 +133,12 @@ class Wheel2watchControl extends ControlExtension {
     }
 
     public void setTopSpeedLabel(String val, boolean send) {
-        topSpeedLabel = val.substring(0, val.length() - 1) + "." + val.charAt(val.length()-1);
+        String toins;
+        if (val.length() == 1)
+            toins = "0.";
+        else
+            toins = ".";
+        topSpeedLabel = new StringBuilder(val).insert(val.length()-1, toins).toString();
         if (send)
             sendText(R.id.tv_topspeed, topSpeedLabel);
     }
@@ -135,7 +151,12 @@ class Wheel2watchControl extends ControlExtension {
     }
 
     public void setSpeedLabel(String val, boolean send) {
-        speedLabel = val.substring(0, val.length() - 1) + "." + val.charAt(val.length()-1);
+        String toins;
+        if (val.length() == 1)
+            toins = "0.";
+        else
+            toins = ".";
+        speedLabel = new StringBuilder(val).insert(val.length()-1, toins).toString();
         if (send)
             sendText(R.id.tv_speed, speedLabel);
     }
@@ -194,6 +215,7 @@ class Wheel2watchControl extends ControlExtension {
                 Intent intent = new Intent(INTENT_APP_RECEIVE);
                 intent.putExtra(APP_UUID, PEBBLE_APP_UUID);
                 intent.putExtra(WheelDataReceiver.TRANSACTION_ID, 1);
+                // for wheelLog it means play melody on phone or wheel as set
                 intent.putExtra(WheelDataReceiver.MSG_DATA, "[{\"key\":10013,\"type\":\"int\",\"length\":4,\"value\":1}]");
                 mContext.sendBroadcast(intent);
             } else {
@@ -247,10 +269,14 @@ class Wheel2watchControl extends ControlExtension {
         bundle6.putString(Control.Intents.EXTRA_TEXT, battLabel);
 
         Bundle bundle7 = new Bundle();
-        bundle7.putInt(Control.Intents.EXTRA_LAYOUT_REFERENCE, R.id.tv_temp);
-        bundle7.putString(Control.Intents.EXTRA_TEXT, tempLabel);
+        bundle7.putInt(Control.Intents.EXTRA_LAYOUT_REFERENCE, R.id.tv_connected);
+        bundle7.putString(Control.Intents.EXTRA_TEXT, wheelConnectedLabel);
 
-        Bundle[] bundleData = new Bundle[7];
+        Bundle bundle8 = new Bundle();
+        bundle8.putInt(Control.Intents.EXTRA_LAYOUT_REFERENCE, R.id.tv_temp);
+        bundle8.putString(Control.Intents.EXTRA_TEXT, tempLabel);
+
+        Bundle[] bundleData = new Bundle[8];
         bundleData[0] = bundle1;
         bundleData[1] = bundle2;
         bundleData[2] = bundle3;
@@ -258,6 +284,7 @@ class Wheel2watchControl extends ControlExtension {
         bundleData[4] = bundle5;
         bundleData[5] = bundle6;
         bundleData[6] = bundle7;
+        bundleData[7] = bundle8;
 
         showLayout(R.layout.layout, bundleData);
     }
@@ -284,6 +311,7 @@ class Wheel2watchControl extends ControlExtension {
                 , 0L, 30000L);
 
         IntentFilter filter = new IntentFilter(WheelDataReceiver.INTENT_APP_SEND);
+        filter.addAction(WheelDataReceiver.ACTION_BLUETOOTH_CONNECTION_STATE);
         mContext.getApplicationContext().registerReceiver(wdr, filter);
 
 
@@ -297,6 +325,9 @@ class Wheel2watchControl extends ControlExtension {
         Log.d(Wheel2watchExtensionService.LOG_TAG, "onPause: Wheel2watchControl");
         if (wdr != null)
             mContext.getApplicationContext().unregisterReceiver(wdr);
+        if (mTimer != null) {
+            mTimer.cancel();
+        }
         super.onPause();
     }
 

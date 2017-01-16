@@ -15,6 +15,9 @@ public class WheelDataReceiver extends BroadcastReceiver {
     public static final String MSG_DATA = "msg_data";
     public static final String INTENT_APP_RECEIVE_ACK = "com.getpebble.action.app.RECEIVE_ACK";
 
+    public static final String ACTION_BLUETOOTH_CONNECTION_STATE = "com.cooper.wheellog.bluetoothConnectionState";
+    public static final String INTENT_EXTRA_CONNECTION_STATE = "connection_state";
+
     public static final String ACTION_PEBBLE_APP_SCREEN = "com.cooper.wheellog.pebbleAppScreen";
     public static final String INTENT_EXTRA_PEBBLE_DISPLAYED_SCREEN = "pebble_displayed_Screen";
 
@@ -35,7 +38,7 @@ public class WheelDataReceiver extends BroadcastReceiver {
     static final String KEY_READY = "11";
 
     Wheel2watchControl wheelControl;
-    final Intent i = new Intent(INTENT_APP_RECEIVE_ACK);
+    final Intent intent_received = new Intent(INTENT_APP_RECEIVE_ACK);
     long lastTimeReceive;
     long lastTimeDetails;
     boolean isDetailsMode = false;
@@ -44,25 +47,31 @@ public class WheelDataReceiver extends BroadcastReceiver {
         super();
         Log.d(Wheel2watchExtensionService.LOG_TAG, "onCreate: WheelDataReceiver");
         wheelControl = main;
-        i.putExtra(TRANSACTION_ID, 1);
+        intent_received.putExtra(TRANSACTION_ID, 1);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(Wheel2watchExtensionService.LOG_TAG, "onReceive: WheelDataReceiver");
-        if (isDetailsMode)
-            switchMode(context);
-        long newTime = Calendar.getInstance().getTimeInMillis();
-        if ( newTime - lastTimeReceive > MIN_GET_INFO_DELAY) {
-            Log.d(Wheel2watchExtensionService.LOG_TAG, "newTime:" + newTime + ", lastTimeReceive:" + lastTimeReceive);
-            lastTimeReceive =  newTime;
-            int tran = intent.getIntExtra(TRANSACTION_ID, 0);
-            parseData(intent.getStringExtra(MSG_DATA));
-            context.sendBroadcast(i);
-            if (!isDetailsMode && newTime - lastTimeDetails > DETAIL_MODE_DELAY){
-                lastTimeDetails = newTime;
+        String action = intent.getAction();
+        if (INTENT_APP_SEND.equals(action)){
+            if (isDetailsMode)
                 switchMode(context);
+            long newTime = Calendar.getInstance().getTimeInMillis();
+            if ( newTime - lastTimeReceive > MIN_GET_INFO_DELAY) {
+                Log.d(Wheel2watchExtensionService.LOG_TAG, "newTime:" + newTime + ", lastTimeReceive:" + lastTimeReceive);
+                lastTimeReceive =  newTime;
+                int tran = intent.getIntExtra(TRANSACTION_ID, 0);
+                parseData(intent.getStringExtra(MSG_DATA));
+                context.sendBroadcast(intent_received);
+                if (!isDetailsMode && newTime - lastTimeDetails > DETAIL_MODE_DELAY){
+                    lastTimeDetails = newTime;
+                    wheelControl.setWheelConnected(true);
+                    switchMode(context);
+                }
             }
+        } else if (ACTION_BLUETOOTH_CONNECTION_STATE.equals(action)){
+            wheelControl.setWheelConnected(intent.getBooleanExtra(INTENT_EXTRA_CONNECTION_STATE, false));
         }
 
     }
