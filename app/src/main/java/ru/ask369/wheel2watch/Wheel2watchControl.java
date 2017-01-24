@@ -90,6 +90,15 @@ class Wheel2watchControl extends ControlExtension {
     long lastVibe = 0;
     long readyTime = Calendar.getInstance().getTimeInMillis();;
 
+    String addDecimal2String(String val){
+        String toins;
+        if (val.length() == 1)
+            toins = "0.";
+        else
+            toins = ".";
+        return new StringBuilder(val).insert(val.length()-1, toins).toString();
+    }
+
     public void setReadyTime() {
         this.readyTime = Calendar.getInstance().getTimeInMillis();
     }
@@ -127,18 +136,13 @@ class Wheel2watchControl extends ControlExtension {
     }
 
     public void setDistanceLabel(String val, boolean send) {
-        distanceLabel = val.substring(0, val.length() - 1) + "." + val.charAt(val.length()-1) + "km";
+        distanceLabel = addDecimal2String(val) + "km";
         if (send)
             sendText(R.id.tv_distance, distanceLabel);
     }
 
     public void setTopSpeedLabel(String val, boolean send) {
-        String toins;
-        if (val.length() == 1)
-            toins = "0.";
-        else
-            toins = ".";
-        topSpeedLabel = new StringBuilder(val).insert(val.length()-1, toins).toString();
+        topSpeedLabel = addDecimal2String(val);
         if (send)
             sendText(R.id.tv_topspeed, topSpeedLabel);
     }
@@ -151,12 +155,7 @@ class Wheel2watchControl extends ControlExtension {
     }
 
     public void setSpeedLabel(String val, boolean send) {
-        String toins;
-        if (val.length() == 1)
-            toins = "0.";
-        else
-            toins = ".";
-        speedLabel = new StringBuilder(val).insert(val.length()-1, toins).toString();
+        speedLabel = addDecimal2String(val);
         if (send)
             sendText(R.id.tv_speed, speedLabel);
     }

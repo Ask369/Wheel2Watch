@@ -17,6 +17,9 @@ public class WheelDataReceiver extends BroadcastReceiver {
 
     public static final String ACTION_BLUETOOTH_CONNECTION_STATE = "com.cooper.wheellog.bluetoothConnectionState";
     public static final String INTENT_EXTRA_CONNECTION_STATE = "connection_state";
+    public static final int STATE_DISCONNECTED = 0;
+    public static final int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTED = 2;
 
     public static final String ACTION_PEBBLE_APP_SCREEN = "com.cooper.wheellog.pebbleAppScreen";
     public static final String INTENT_EXTRA_PEBBLE_DISPLAYED_SCREEN = "pebble_displayed_Screen";
@@ -71,7 +74,7 @@ public class WheelDataReceiver extends BroadcastReceiver {
                 }
             }
         } else if (ACTION_BLUETOOTH_CONNECTION_STATE.equals(action)){
-            wheelControl.setWheelConnected(intent.getBooleanExtra(INTENT_EXTRA_CONNECTION_STATE, false));
+            wheelControl.setWheelConnected(intent.getIntExtra(INTENT_EXTRA_CONNECTION_STATE, STATE_DISCONNECTED) == STATE_CONNECTED);
         }
 
     }
