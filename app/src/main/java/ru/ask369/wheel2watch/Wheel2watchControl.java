@@ -72,6 +72,13 @@ class Wheel2watchControl extends ControlExtension {
     public static final UUID PEBBLE_APP_UUID = UUID.fromString("185c8ae9-7e72-451a-a1c7-8f1e81df9a3d");
     public static final String APP_UUID = "uuid";
 
+    enum EventType {
+        TOUCH, OBJECT_CLICK, KEY_OPTIONS, KEY_BACK, MENU_ITEM_CLICK
+    }
+    private static final int MENU_ITEM_0 = 0;
+    Bundle[] mMenuItemsText = new Bundle[1];
+    boolean alarmsAllowed = true;
+
 
     WheelDataReceiver wdr = new WheelDataReceiver(this);
 
@@ -109,16 +116,17 @@ class Wheel2watchControl extends ControlExtension {
             if (wheelConnected)
                 wheelConnectedLabel = "OK";
             else
-                wheelConnectedLabel = "Fail";
+                wheelConnectedLabel = "No conn";
             sendText(R.id.tv_connected, wheelConnectedLabel);
         }
     }
-    public void setVibe (String val, boolean send){
+    public void setVibe (String val){
+        if (!alarmsAllowed) return;
         long now = Calendar.getInstance().getTimeInMillis();
-        if (send && now - lastVibe > 2000){
-            if ("0".equals(val))
+        if (now - lastVibe > 2000){
+            if ("0".equals(val))  // speed alarm from wheelLog
                 startVibrator(400, 300, 2);
-            else
+            else if ("1".equals(val)) // current alarm from wheelLog
                 startVibrator(1000, 0, 1);
             lastVibe = now;
         }
@@ -190,6 +198,16 @@ class Wheel2watchControl extends ControlExtension {
         SharedPreferences pref = context.getSharedPreferences(Wheel2watchRegistrationInformation.EXTENSION_KEY_PREF,
                 Context.MODE_PRIVATE);
         pref.edit().putString(Wheel2watchExtensionReceiver.HOST_APP_PACKAGE_NAME, hostAppPackageName).commit();
+        initializeMenus();
+    }
+
+    /**
+     * Prepares icons and text menu items for the SmartWatch 2 options menu.
+     * For each menu item you define an ID and a label, or an icon.
+     */
+    private void initializeMenus() {
+        mMenuItemsText[0] = new Bundle();
+        mMenuItemsText[0].putInt(Control.Intents.EXTRA_MENU_ITEM_ID, MENU_ITEM_0);
     }
 
     @Override
@@ -243,6 +261,7 @@ class Wheel2watchControl extends ControlExtension {
     public void updateLayout() {
         Log.d(Wheel2watchExtensionService.LOG_TAG, "updateLayout: Wheel2watchControl");
         // Prepare a bundle to update the button text.
+        setCurrTime(false);
         Bundle bundle1 = new Bundle();
         bundle1.putInt(Control.Intents.EXTRA_LAYOUT_REFERENCE, R.id.tv_time);
         bundle1.putString(Control.Intents.EXTRA_TEXT, currTime);
@@ -310,7 +329,7 @@ class Wheel2watchControl extends ControlExtension {
                 , 0L, 30000L);
 
         IntentFilter filter = new IntentFilter(WheelDataReceiver.INTENT_APP_SEND);
-        filter.addAction(WheelDataReceiver.ACTION_BLUETOOTH_CONNECTION_STATE);
+//        filter.addAction(WheelDataReceiver.ACTION_BLUETOOTH_CONNECTION_STATE);
         mContext.getApplicationContext().registerReceiver(wdr, filter);
 
 
@@ -338,6 +357,22 @@ class Wheel2watchControl extends ControlExtension {
             // Adapt your app layout to the Low Power Mode is
             // disabled
         }
+    }
+    @Override
+    public void onKey(final int action, final int keyCode, final long timeStamp) {
+        Log.d(Wheel2watchExtensionService.LOG_TAG, "onKey()");
+        if (action == Control.Intents.KEY_ACTION_RELEASE
+                && keyCode == Control.KeyCodes.KEYCODE_OPTIONS) {
+            // When pressing the menu button on the SmartWatch 2, we toggle the
+            // menu to switch between showing text or icon items.
+            mMenuItemsText[0].putString(Control.Intents.EXTRA_MENU_ITEM_TEXT, alarmsAllowed?"Alerts ON":"Alerts OFF");
+            showMenu(mMenuItemsText);
+        }
+    }
+    @Override
+    public void onMenuItemSelected(final int menuItem) {
+        Log.d(Wheel2watchExtensionService.LOG_TAG, "onMenuItemSelected() - menu item " + menuItem);
+        alarmsAllowed = !alarmsAllowed;
     }
 
 }

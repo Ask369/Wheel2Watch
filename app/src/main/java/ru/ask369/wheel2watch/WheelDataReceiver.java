@@ -64,17 +64,15 @@ public class WheelDataReceiver extends BroadcastReceiver {
             if ( newTime - lastTimeReceive > MIN_GET_INFO_DELAY) {
                 Log.d(Wheel2watchExtensionService.LOG_TAG, "newTime:" + newTime + ", lastTimeReceive:" + lastTimeReceive);
                 lastTimeReceive =  newTime;
-                int tran = intent.getIntExtra(TRANSACTION_ID, 0);
+//                int tran = intent.getIntExtra(TRANSACTION_ID, 0);
                 parseData(intent.getStringExtra(MSG_DATA));
                 context.sendBroadcast(intent_received);
                 if (!isDetailsMode && newTime - lastTimeDetails > DETAIL_MODE_DELAY){
                     lastTimeDetails = newTime;
-                    wheelControl.setWheelConnected(true);
                     switchMode(context);
                 }
             }
         } else if (ACTION_BLUETOOTH_CONNECTION_STATE.equals(action)){
-            wheelControl.setWheelConnected(intent.getIntExtra(INTENT_EXTRA_CONNECTION_STATE, STATE_DISCONNECTED) == STATE_CONNECTED);
         }
 
     }
@@ -139,7 +137,7 @@ public class WheelDataReceiver extends BroadcastReceiver {
         } else if (KEY_TEMPERATURE.equals(key)){
             wheelControl.setTempLabel(val, immediate);
         } else if (KEY_VIBE_ALERT.equals(key)){
-            wheelControl.setVibe(val, immediate);
+            wheelControl.setVibe(val);
         } else if (KEY_RIDE_TIME.equals(key)){
             wheelControl.setRideTimeLabel(val, immediate);
         } else if (KEY_DISTANCE.equals(key)){
@@ -148,6 +146,8 @@ public class WheelDataReceiver extends BroadcastReceiver {
             wheelControl.setTopSpeedLabel(val, immediate);
         } else if (KEY_READY.equals(key)){
             wheelControl.setReadyTime();
+        } else if (KEY_BT_STATE.equals(key)){
+            wheelControl.setWheelConnected( "1".equals(val));
         }
     }
 }
