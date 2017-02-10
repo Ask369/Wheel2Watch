@@ -39,6 +39,7 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.sonyericsson.extras.liveware.aef.control.Control;
@@ -68,36 +69,42 @@ class Wheel2watchControl extends ControlExtension {
     /**
      * Intent broadcast from pebble.apk containing one-or-more key-value pairs sent from the watch to the phone.
      */
-    public static final String INTENT_APP_RECEIVE = "com.getpebble.action.app.RECEIVE";
-    public static final UUID PEBBLE_APP_UUID = UUID.fromString("185c8ae9-7e72-451a-a1c7-8f1e81df9a3d");
-    public static final String APP_UUID = "uuid";
+    private static final String INTENT_APP_RECEIVE = "com.getpebble.action.app.RECEIVE";
+    private static final UUID PEBBLE_APP_UUID = UUID.fromString("185c8ae9-7e72-451a-a1c7-8f1e81df9a3d");
+    private static final String APP_UUID = "uuid";
 
-    enum EventType {
-        TOUCH, OBJECT_CLICK, KEY_OPTIONS, KEY_BACK, MENU_ITEM_CLICK
-    }
+    private static Wheel2watchControl wheel2watchControl;
+
     private static final int MENU_ITEM_0 = 0;
-    Bundle[] mMenuItemsText = new Bundle[1];
-    boolean alarmsAllowed = true;
+    private final Bundle[] mMenuItemsText = new Bundle[1];
+    private boolean alarmsAllowed = true;
 
 
-    WheelDataReceiver wdr = new WheelDataReceiver(this);
+    private final WheelDataReceiver wdr = new WheelDataReceiver(this);
 
-    Timer mTimer;
+    private Timer mTimer;
 
-    String currTime = "00:00";
-    String speedLabel = "0.0";
-    String rideTimeLabel = "000/000m";
-    String topSpeedLabel = "0.0";
-    String distanceLabel = "0.0km";
-    String battLabel = "0%";
-    String tempLabel = "0°";
-    boolean wheelConnected = false;
-    String wheelConnectedLabel = "No conn";
+    private String currTime = "00:00";
+    private String speedLabel = "0.0";
+    private String rideTimeLabel = "000/000m";
+    private String topSpeedLabel = "0.0";
+    private String distanceLabel = "0.0km";
+    private String battLabel = "0%";
+    private String tempLabel = "0°";
+    private boolean wheelConnected = false;
+    private String wheelConnectedLabel = "No conn";
 
-    long lastVibe = 0;
-    long readyTime = Calendar.getInstance().getTimeInMillis();;
+    private int tempAlarm = 0;
+    private static final long PAUSE_BETWEEN_TEMP_ALARM_MS = 180000L;
 
-    String addDecimal2String(String val){
+    private long lastVibe = 0;
+    private long lastTempVibe = 0;
+    private long readyTime = Calendar.getInstance().getTimeInMillis();;
+
+    static Wheel2watchControl getInstance(){
+        return wheel2watchControl;
+    }
+    private String addDecimal2String(String val){
         String toins;
         if (val.length() == 1)
             toins = "0.";
@@ -106,11 +113,11 @@ class Wheel2watchControl extends ControlExtension {
         return new StringBuilder(val).insert(val.length()-1, toins).toString();
     }
 
-    public void setReadyTime() {
+    void setReadyTime() {
         this.readyTime = Calendar.getInstance().getTimeInMillis();
     }
 
-    public void setWheelConnected(boolean val){
+    void setWheelConnected(boolean val){
         if (wheelConnected != val) {
             wheelConnected = val;
             if (wheelConnected)
@@ -120,66 +127,76 @@ class Wheel2watchControl extends ControlExtension {
             sendText(R.id.tv_connected, wheelConnectedLabel);
         }
     }
-    public void setVibe (String val){
+    void setVibe (String val){
         if (!alarmsAllowed) return;
         long now = Calendar.getInstance().getTimeInMillis();
-        if (now - lastVibe > 2000){
+        if (now - lastVibe > 3000){
             if ("0".equals(val))  // speed alarm from wheelLog
-                startVibrator(400, 300, 2);
+                startVibrator(1500, 0, 1);
             else if ("1".equals(val)) // current alarm from wheelLog
-                startVibrator(1000, 0, 1);
+                startVibrator(600, 500, 2);
+            else if ("t".equals(val) && now - lastTempVibe > PAUSE_BETWEEN_TEMP_ALARM_MS) { // temp alarm
+                startVibrator(400, 400, 3);
+                lastTempVibe = now;
+            }else
+                return;
             lastVibe = now;
         }
     }
-    public void setTempLabel(String val, boolean send) {
+    void setTempLabel(String val, boolean send) {
         tempLabel = val + "°";
         if (send)
             sendText(R.id.tv_temp, tempLabel);
+        if (tempAlarm != 0 && Integer.parseInt(val) >= tempAlarm){
+            setVibe("t");
+        }
     }
 
-    public void setBattLabel(String val, boolean send) {
+    void setBattLabel(String val, boolean send) {
         battLabel = val + "%";
         if (send)
             sendText(R.id.tv_battery, battLabel);
     }
 
-    public void setDistanceLabel(String val, boolean send) {
+    void setDistanceLabel(String val, boolean send) {
         distanceLabel = addDecimal2String(val) + "km";
         if (send)
             sendText(R.id.tv_distance, distanceLabel);
     }
 
-    public void setTopSpeedLabel(String val, boolean send) {
+    void setTopSpeedLabel(String val, boolean send) {
         topSpeedLabel = addDecimal2String(val);
         if (send)
             sendText(R.id.tv_topspeed, topSpeedLabel);
     }
 
-    public void setRideTimeLabel(String val, boolean send) {
+    void setRideTimeLabel(String val, boolean send) {
         rideTimeLabel = Integer.parseInt(val)/60 + " / " +
                 (Calendar.getInstance().getTimeInMillis()-readyTime)/60000L +"m";
         if (send)
             sendText(R.id.tv_ridetime, rideTimeLabel);
     }
 
-    public void setSpeedLabel(String val, boolean send) {
+    void setSpeedLabel(String val, boolean send) {
         speedLabel = addDecimal2String(val);
         if (send)
             sendText(R.id.tv_speed, speedLabel);
     }
 
-    public void setCurrTime(boolean send) {
+    private void setCurrTime(boolean send) {
         currTime = String.format("%1$tI:%1$tM", Calendar.getInstance());
         if (send)
             sendText(R.id.tv_time, currTime);
     }
 
-    enum RenderType {
-        LAYOUT, BITMAP
+    void loadPrefs(){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mContext);
+        try {
+            tempAlarm = Integer.parseInt(sp.getString(mContext.getString(R.string.Temperature_alarm_key), "0"));
+        }catch (NumberFormatException e){
+            tempAlarm = 0;
+        }
     }
-
-    /** Contains the chosen UI to render, e.g. layout or bitmap. */
-    private RenderType mRenderType = RenderType.LAYOUT;
 
 
     /**
@@ -195,8 +212,9 @@ class Wheel2watchControl extends ControlExtension {
         if (handler == null) {
             throw new IllegalArgumentException("handler == null");
         }
-        SharedPreferences pref = context.getSharedPreferences(Wheel2watchRegistrationInformation.EXTENSION_KEY_PREF,
-                Context.MODE_PRIVATE);
+        wheel2watchControl = this;
+        loadPrefs();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         pref.edit().putString(Wheel2watchExtensionReceiver.HOST_APP_PACKAGE_NAME, hostAppPackageName).commit();
         initializeMenus();
     }
@@ -245,6 +263,7 @@ class Wheel2watchControl extends ControlExtension {
                         mp.release();
                     }
                 });
+
             }
         }
     }
@@ -258,7 +277,7 @@ class Wheel2watchControl extends ControlExtension {
      * @see Control.Intents#EXTRA_DATA_XML_LAYOUT
      * @see Registration.LayoutSupport
      */
-    public void updateLayout() {
+    void updateLayout() {
         Log.d(Wheel2watchExtensionService.LOG_TAG, "updateLayout: Wheel2watchControl");
         // Prepare a bundle to update the button text.
         setCurrTime(false);

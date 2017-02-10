@@ -35,6 +35,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.sonyericsson.extras.liveware.aef.control.Control;
@@ -49,22 +50,21 @@ public class Wheel2watchExtensionReceiver extends BroadcastReceiver {
      * Intent broadcast to pebble.apk responsible for launching a watch-app on the connected watch. This intent is
      * idempotent.
      */
-    public static final String INTENT_APP_START = "com.getpebble.action.app.START";
+    private static final String INTENT_APP_START = "com.getpebble.action.app.START";
 
     /**
      * Intent broadcast to pebble.apk responsible for closing a running watch-app on the connected watch. This intent is
      * idempotent.
      */
-    public static final String INTENT_APP_STOP = "com.getpebble.action.app.STOP";
-    public static final String HOST_PACKAGE_DEF = "com.sonymobile.smartconnect.smartwatch2";
+    private static final String INTENT_APP_STOP = "com.getpebble.action.app.STOP";
+    private static final String HOST_PACKAGE_DEF = "com.sonymobile.smartconnect.smartwatch2";
     public static final String HOST_APP_PACKAGE_NAME = "HOST_APP_PACKAGE_NAME";
 
-    public static String HOST_PACKAGE;
+    private static String HOST_PACKAGE;
 
     private String getHostPackage(final Context context){
         if (HOST_PACKAGE == null){
-            SharedPreferences pref = context.getSharedPreferences(Wheel2watchRegistrationInformation.EXTENSION_KEY_PREF,
-                    Context.MODE_PRIVATE);
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
             if (pref.contains(HOST_APP_PACKAGE_NAME)) {
                 HOST_PACKAGE = pref.getString(HOST_APP_PACKAGE_NAME, HOST_PACKAGE_DEF);
             } else

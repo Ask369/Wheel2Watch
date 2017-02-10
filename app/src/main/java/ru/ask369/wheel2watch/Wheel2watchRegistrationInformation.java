@@ -15,10 +15,10 @@ import java.util.UUID;
  * Created by Andrew on 05/01/17.
  */
 
-public class Wheel2watchRegistrationInformation extends RegistrationInformation {
-    final Context mContext;
+class Wheel2watchRegistrationInformation extends RegistrationInformation {
+    private final Context mContext;
     private String extensionKey;
-    public static final String EXTENSION_KEY_PREF = "EXTENSION_KEY_PREF";
+    private static final String EXTENSION_KEY_PREF = "EXTENSION_KEY_PREF";
 
 
     /**
@@ -26,7 +26,7 @@ public class Wheel2watchRegistrationInformation extends RegistrationInformation 
      *
      * @param context The context.
      */
-    protected Wheel2watchRegistrationInformation(Context context) {
+    Wheel2watchRegistrationInformation(Context context) {
         if (context == null) {
             throw new IllegalArgumentException("context == null");
         }
@@ -77,7 +77,7 @@ public class Wheel2watchRegistrationInformation extends RegistrationInformation 
         ContentValues values = new ContentValues();
 
         values.put(Registration.ExtensionColumns.CONFIGURATION_ACTIVITY,
-                Wheel2watchRegistrationInformation.class.getName());
+                Wheel2WatchPrefs.class.getName());
         values.put(Registration.ExtensionColumns.CONFIGURATION_TEXT,
                 mContext.getString(R.string.configuration_text));
         values.put(Registration.ExtensionColumns.NAME, mContext.getString(R.string.extension_name));

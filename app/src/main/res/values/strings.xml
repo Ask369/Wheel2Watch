@@ -6,7 +6,11 @@
     <!-- Configuration title shown in preferences -->
     <string name="configuration_text">Wheel2Watch Settings</string>
     <!-- Menu option shown in preferences -->
-    <!-- Read me text shown in dialog -->
+
+    <string name="Temperature_alarm_key">tempAlarmValue</string>
+    <string name="Temperature_alarm">Temperature alarm</string>
+    <string name="Temperature_alarm_summary">Temperature alarm value in WheelLog units</string>
+    <string name="preference_activity_title">Wheel2Whatch preferences</string>
 
 
 </resources>

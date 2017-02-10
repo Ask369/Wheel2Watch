@@ -13,38 +13,38 @@ public class WheelDataReceiver extends BroadcastReceiver {
     public static final String TRANSACTION_ID = "transaction_id";
     public static final String APP_UUID = "uuid";
     public static final String MSG_DATA = "msg_data";
-    public static final String INTENT_APP_RECEIVE_ACK = "com.getpebble.action.app.RECEIVE_ACK";
+    private static final String INTENT_APP_RECEIVE_ACK = "com.getpebble.action.app.RECEIVE_ACK";
 
-    public static final String ACTION_BLUETOOTH_CONNECTION_STATE = "com.cooper.wheellog.bluetoothConnectionState";
+    private static final String ACTION_BLUETOOTH_CONNECTION_STATE = "com.cooper.wheellog.bluetoothConnectionState";
     public static final String INTENT_EXTRA_CONNECTION_STATE = "connection_state";
     public static final int STATE_DISCONNECTED = 0;
     public static final int STATE_CONNECTING = 1;
     public static final int STATE_CONNECTED = 2;
 
-    public static final String ACTION_PEBBLE_APP_SCREEN = "com.cooper.wheellog.pebbleAppScreen";
-    public static final String INTENT_EXTRA_PEBBLE_DISPLAYED_SCREEN = "pebble_displayed_Screen";
+    private static final String ACTION_PEBBLE_APP_SCREEN = "com.cooper.wheellog.pebbleAppScreen";
+    private static final String INTENT_EXTRA_PEBBLE_DISPLAYED_SCREEN = "pebble_displayed_Screen";
 
-    public static final long DETAIL_MODE_DELAY = 5000L;
-    public static final long MIN_GET_INFO_DELAY = 200L;
+    private static final long DETAIL_MODE_DELAY = 5000L;
+    private static final long MIN_GET_INFO_DELAY = 200L;
 
-    static final String KEY_SPEED = "0";
-    static final String KEY_BATTERY = "1";
-    static final String KEY_TEMPERATURE = "2";
+    private static final String KEY_SPEED = "0";
+    private static final String KEY_BATTERY = "1";
+    private static final String KEY_TEMPERATURE = "2";
     static final String KEY_FAN_STATE = "3";
-    static final String KEY_BT_STATE = "4";
-    static final String KEY_VIBE_ALERT = "5";
+    private static final String KEY_BT_STATE = "4";
+    private static final String KEY_VIBE_ALERT = "5";
     static final String KEY_USE_MPH = "6";
     static final String KEY_MAX_SPEED = "7";
-    static final String KEY_RIDE_TIME = "8";
-    static final String KEY_DISTANCE = "9";
-    static final String KEY_TOP_SPEED = "10";
-    static final String KEY_READY = "11";
+    private static final String KEY_RIDE_TIME = "8";
+    private static final String KEY_DISTANCE = "9";
+    private static final String KEY_TOP_SPEED = "10";
+    private static final String KEY_READY = "11";
 
-    Wheel2watchControl wheelControl;
-    final Intent intent_received = new Intent(INTENT_APP_RECEIVE_ACK);
-    long lastTimeReceive;
-    long lastTimeDetails;
-    boolean isDetailsMode = false;
+    private final Wheel2watchControl wheelControl;
+    private final Intent intent_received = new Intent(INTENT_APP_RECEIVE_ACK);
+    private long lastTimeReceive;
+    private long lastTimeDetails;
+    private boolean isDetailsMode = false;
 
     public WheelDataReceiver(Wheel2watchControl main) {
         super();
